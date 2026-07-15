@@ -43,7 +43,7 @@ const getModulos = async (req, res) => {
   }
 };
 
-const minioClient = require('../config/minioClient');
+const { minioClientMedia } = require('../config/minioClient');
 
 const getAudioPresignedUrl = async (req, res) => {
   const { id } = req.params;
@@ -75,7 +75,7 @@ const getAudioPresignedUrl = async (req, res) => {
     const bucketName = process.env.MINIO_BUCKET_AUDIOS || 'academia-trading-audios';
     const objectName = modulo.audio_url; // Ej: clase-1.mp3
 
-    const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 900); // 15 mins
+    const presignedUrl = await minioClientMedia.presignedGetObject(bucketName, objectName, 900); // 15 mins
 
     res.json({ presignedUrl });
   } catch (error) {
@@ -100,9 +100,8 @@ const getImagenModulo = async (req, res) => {
       return res.redirect(302, cachedUrl.url);
     }
 
-    // Generar nueva firma de 15 minutos (900s)
-    const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 900);
-    
+    // Generar URL firmada para LECTURA (expira en 15 minutos = 900 segundos)
+    const presignedUrl = await minioClientMedia.presignedGetObject(bucketName, objectName, 900); // 15 mins  
     // Guardar en cache con expiración en 10 minutos (600,000 ms) para asegurar margen
     signatureCache.set(objectName, {
       url: presignedUrl,

@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const minioClient = require('../config/minioClient');
+const { minioClientCapturas } = require('../config/minioClient');
 
 // Obtener bitácora de operaciones (con filtros y paginación)
 const getOperaciones = async (req, res) => {
@@ -145,7 +145,7 @@ const subirCaptura = async (req, res) => {
     const objectName = `operacion_${operacionId}_${Date.now()}.${extension}`;
     
     // Subir a MinIO desde memoria (Server-to-Server)
-    await minioClient.putObject(bucketName, objectName, file.buffer, file.size, {
+    await minioClientCapturas.putObject(bucketName, objectName, file.buffer, file.size, {
       'Content-Type': file.mimetype
     });
 
@@ -186,7 +186,7 @@ const obtenerUrlCaptura = async (req, res) => {
     const bucketName = process.env.MINIO_BUCKET || 'academia-trading-capturas';
     
     // Generar URL firmada para LECTURA (expira en 15 minutos = 900 segundos)
-    const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 900);
+    const presignedUrl = await minioClientCapturas.presignedGetObject(bucketName, objectName, 900);
 
     res.json({
       presigned_url: presignedUrl,

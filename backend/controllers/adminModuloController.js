@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const minioClient = require('../config/minioClient');
+const { minioClientMedia } = require('../config/minioClient');
 
 const validateUrl = (url, type) => {
   if (!url) return true; // Nullable
@@ -125,7 +125,7 @@ const uploadImagenModulo = async (req, res) => {
     const bucketName = process.env.MINIO_BUCKET_IMAGENES || 'academia-trading-imagenes-modulos';
 
     // Subir a MinIO
-    await minioClient.putObject(bucketName, objectName, file.buffer, file.size, {
+    await minioClientMedia.putObject(bucketName, objectName, file.buffer, file.size, {
       'Content-Type': file.mimetype
     });
 
