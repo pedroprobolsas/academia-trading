@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Shield, AlertTriangle, CheckCircle, XCircle, UserX, UserCheck } from 'lucide-react';
+import ModuloForm from '../components/ModuloForm';
 
 export default function AdminDashboard() {
   const { token } = useAuth();
   const [activeTab, setActiveTab] = useState('alumnos'); // 'alumnos' | 'certificaciones'
   const [alumnos, setAlumnos] = useState([]);
   const [certificaciones, setCertificaciones] = useState([]);
+  const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modal states
-  const [modalType, setModalType] = useState(null); // 'rechazo', 'bloqueo'
+  const [modalType, setModalType] = useState(null); // 'rechazo', 'bloqueo', 'moduloForm'
   const [selectedItem, setSelectedItem] = useState(null);
   const [motivo, setMotivo] = useState('');
 
@@ -40,12 +42,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchModulos = async () => {
+    try {
+      const res = await fetch('/api/admin/modulos', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setModulos(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     setLoading(true);
     if (activeTab === 'alumnos') {
       fetchAlumnos().finally(() => setLoading(false));
-    } else {
+    } else if (activeTab === 'certificaciones') {
       fetchCertificaciones().finally(() => setLoading(false));
+    } else {
+      fetchModulos().finally(() => setLoading(false));
     }
   }, [activeTab, token]);
 
@@ -126,6 +143,16 @@ export default function AdminDashboard() {
           }`}
         >
           Certificaciones Pendientes
+        </button>
+        <button
+          onClick={() => setActiveTab('modulos')}
+          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+            activeTab === 'modulos' 
+              ? 'border-brand-accent text-brand-accent' 
+              : 'border-transparent text-gray-400 hover:text-white hover:border-gray-700'
+          }`}
+        >
+          Gestor de Currículum
         </button>
       </div>
 
@@ -223,9 +250,61 @@ export default function AdminDashboard() {
           ))}
           {certificaciones.length === 0 && <p className="text-gray-500">No hay certificaciones pendientes de revisión.</p>}
         </div>
+      ) : (
+        <div className="grid gap-4">
+          <div className="flex justify-end mb-4">
+            <button 
+              onClick={() => { setSelectedItem(null); setModalType('moduloForm'); }}
+              className="px-4 py-2 bg-brand-accent hover:bg-[#ff9075] text-white rounded-lg transition-colors font-medium"
+            >
+              + Nuevo Módulo
+            </button>
+          </div>
+          {modulos.map(modulo => (
+            <div key={modulo.id} className="bg-[#1e2124] border border-gray-800 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-gray-700 transition-colors">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-1">
+                  Módulo {modulo.numero_orden}: {modulo.titulo}
+                </h3>
+                <div className="flex gap-4 text-sm">
+                  <span className="text-gray-400">Nivel: {modulo.nivel}</span>
+                  <span className="text-brand-accent capitalize">Formato: {modulo.formato_principal}</span>
+                  <span className={`font-medium ${modulo.activo ? 'text-green-400' : 'text-red-400'}`}>
+                    {modulo.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => { setSelectedItem(modulo); setModalType('moduloForm'); }}
+                  className="px-4 py-2 border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-lg transition-colors"
+                >
+                  Editar
+                </button>
+                <button 
+                  onClick={async () => {
+                    await fetch(`/api/admin/modulos/${modulo.id}/estado`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                      body: JSON.stringify({ activo: !modulo.activo })
+                    });
+                    fetchModulos();
+                  }}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    modulo.activo 
+                      ? 'bg-red-900/30 text-red-400 hover:bg-red-600 hover:text-white' 
+                      : 'bg-green-900/30 text-green-400 hover:bg-green-600 hover:text-white'
+                  }`}
+                >
+                  {modulo.activo ? 'Desactivar' : 'Activar'}
+                </button>
+              </div>
+            </div>
+          ))}
+          {modulos.length === 0 && <p className="text-gray-500">No hay módulos creados aún.</p>}
+        </div>
       )}
 
-      {/* Modal Rechazo */}
       {modalType === 'rechazo' && selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="bg-[#1e2124] border border-gray-800 rounded-2xl w-full max-w-md p-6 shadow-xl">
@@ -259,6 +338,15 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Modulo Form */}
+      {modalType === 'moduloForm' && (
+        <ModuloForm 
+          modulo={selectedItem} 
+          onClose={() => { setModalType(null); setSelectedItem(null); }} 
+          onSaved={() => { setModalType(null); setSelectedItem(null); fetchModulos(); }} 
+        />
       )}
 
     </div>

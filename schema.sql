@@ -51,15 +51,19 @@ CREATE TABLE planes_trading (
 );
 CREATE UNIQUE INDEX idx_plan_activo_unico ON planes_trading (usuario_id) WHERE activo = true;
 
--- 4. Módulos del curriculum (los 10 ya definidos)
+-- 4. Módulos del curriculum
 CREATE TABLE modulos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   numero_orden SMALLINT NOT NULL UNIQUE,
   titulo VARCHAR(150) NOT NULL,
   descripcion TEXT,
   nivel SMALLINT NOT NULL CHECK (nivel BETWEEN 1 AND 4),
-  contenido_url TEXT NOT NULL,
-  contenido_tipo VARCHAR(20) CHECK (contenido_tipo IN ('video','documento','notion','otro')),
+  contenido_url TEXT, -- Legacy, nullable
+  youtube_url TEXT,
+  drive_url TEXT,
+  audio_url TEXT,
+  contenido_texto TEXT,
+  formato_principal VARCHAR(20) CHECK (formato_principal IN ('video','audio','documento','texto')),
   duracion_estimada_min SMALLINT,
   activo BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

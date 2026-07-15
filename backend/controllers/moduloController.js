@@ -13,8 +13,11 @@ const getModulos = async (req, res) => {
         m.titulo, 
         m.descripcion, 
         m.nivel, 
-        m.contenido_url, 
-        m.contenido_tipo, 
+        m.youtube_url, 
+        m.drive_url, 
+        m.audio_url,
+        m.contenido_texto,
+        m.formato_principal,
         m.duracion_estimada_min,
         COALESCE(pm.estado, 'bloqueado') as estado,
         COALESCE(pm.intentos_quiz, 0) as intentos_quiz

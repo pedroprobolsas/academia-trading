@@ -114,18 +114,65 @@ export default function ModuloDetalle() {
         <p className="text-lg text-gray-300">{modulo.descripcion}</p>
       </header>
 
-      {/* Visor de Contenido (Placeholder para Video/Notion) */}
-      <div className="bg-black aspect-video rounded-2xl border border-gray-800 flex flex-col items-center justify-center mb-12 shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-brand-accent/5 group-hover:bg-brand-accent/10 transition-colors"></div>
-        {modulo.contenido_tipo === 'video' ? (
-          <PlayCircle className="w-20 h-20 text-brand-accent mb-4 opacity-80 group-hover:scale-110 transition-transform" />
-        ) : (
-          <FileText className="w-20 h-20 text-brand-accent mb-4 opacity-80 group-hover:scale-110 transition-transform" />
+      {/* Visor de Contenido */}
+      <div className="mb-12 space-y-8">
+        {/* Renderizado de Video (YouTube) */}
+        {(modulo.formato_principal === 'video' || modulo.youtube_url) && modulo.youtube_url && (
+          <div className="bg-black aspect-video rounded-2xl border border-gray-800 flex items-center justify-center shadow-2xl relative overflow-hidden">
+            <iframe 
+              src={modulo.youtube_url.replace('youtu.be/', 'www.youtube.com/embed/').replace('watch?v=', 'embed/')} 
+              title={modulo.titulo}
+              className="w-full h-full absolute inset-0"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            ></iframe>
+          </div>
         )}
-        <h3 className="text-xl font-bold text-white relative z-10">Material de la Clase</h3>
-        <a href={modulo.contenido_url} target="_blank" rel="noreferrer" className="mt-4 px-6 py-2 bg-brand-accent text-white font-bold rounded-lg relative z-10 hover:bg-white hover:text-brand-accent transition-colors">
-          Abrir en {modulo.contenido_tipo === 'video' ? 'YouTube' : 'Notion'}
-        </a>
+
+        {/* Renderizado de Audio (MinIO) */}
+        {(modulo.formato_principal === 'audio' || modulo.audio_url) && modulo.audio_url && (
+          <div className="bg-[#1e2124] rounded-2xl border border-gray-800 p-6 shadow-lg flex flex-col items-center">
+            <h3 className="text-xl font-bold text-white mb-4">🎧 Escuchar la clase</h3>
+            <audio controls className="w-full max-w-lg">
+              <source src={modulo.audio_url} type="audio/mpeg" />
+              Tu navegador no soporta el elemento de audio.
+            </audio>
+          </div>
+        )}
+
+        {/* Renderizado de Documento (Drive) */}
+        {(modulo.formato_principal === 'documento' || modulo.drive_url) && modulo.drive_url && (
+          <div className="bg-[#141617] rounded-2xl border border-brand-accent/30 p-8 text-center flex flex-col items-center justify-center group">
+            <FileText className="w-16 h-16 text-brand-accent mb-4 opacity-80 group-hover:scale-110 transition-transform" />
+            <h3 className="text-xl font-bold text-white mb-2">Material de Apoyo en PDF</h3>
+            <p className="text-gray-400 mb-6 max-w-md">Descarga o visualiza el documento completo de la clase directamente desde Google Drive.</p>
+            <a href={modulo.drive_url} target="_blank" rel="noreferrer" className="px-6 py-3 bg-brand-accent text-white font-bold rounded-lg hover:bg-white hover:text-brand-accent transition-colors shadow-[0_0_15px_rgba(253,123,91,0.3)]">
+              Abrir Documento en Drive
+            </a>
+          </div>
+        )}
+
+        {/* Legacy fallback */}
+        {(!modulo.youtube_url && !modulo.drive_url && !modulo.audio_url && modulo.contenido_url) && (
+          <div className="bg-[#141617] rounded-2xl border border-gray-800 p-8 text-center flex flex-col items-center justify-center">
+             <PlayCircle className="w-16 h-16 text-brand-accent mb-4" />
+             <h3 className="text-xl font-bold text-white mb-4">Material de la Clase (Legacy)</h3>
+             <a href={modulo.contenido_url} target="_blank" rel="noreferrer" className="px-6 py-2 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors">
+               Abrir Enlace Externo
+             </a>
+          </div>
+        )}
+
+        {/* Renderizado de Texto/Notas */}
+        {modulo.contenido_texto && (
+          <div className="bg-[#141617] rounded-2xl border border-gray-800 p-8">
+            <h3 className="text-xl font-bold text-white mb-4 font-heading border-b border-gray-800 pb-2">Notas del Módulo</h3>
+            <div className="prose prose-invert max-w-none text-gray-300 whitespace-pre-wrap">
+              {modulo.contenido_texto}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sección del Quiz */}
