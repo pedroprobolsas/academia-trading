@@ -95,7 +95,7 @@ const desactivarModulo = async (req, res) => {
       UPDATE modulos SET activo = $1, updated_at = now() WHERE id = $2 RETURNING *
     `, [activo, id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Módulo no encontrado' });
-    res.json({ message: \`Módulo \${activo ? 'activado' : 'desactivado'} correctamente\`, modulo: result.rows[0] });
+    res.json({ message: `Módulo ${activo ? 'activado' : 'desactivado'} correctamente`, modulo: result.rows[0] });
   } catch (error) {
     console.error('Error desactivando módulo:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
