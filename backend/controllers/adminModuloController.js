@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const minioClient = require('../config/minioClient');
 
 const validateUrl = (url, type) => {
   if (!url) return true; // Nullable
@@ -29,6 +30,10 @@ const crearModulo = async (req, res) => {
   if (!validateUrl(drive_url, 'drive')) return res.status(400).json({ error: 'URL de Google Drive inválida.' });
   if (!validateUrl(audio_url, 'minio')) return res.status(400).json({ error: 'URL de Audio (MinIO) inválida.' });
 
+  if (contenido_texto && Array.from(contenido_texto).length > 50000) {
+    return res.status(400).json({ error: 'El contenido de texto no puede exceder los 50,000 caracteres.' });
+  }
+
   try {
     const result = await db.query(`
       INSERT INTO modulos (
@@ -56,6 +61,10 @@ const actualizarModulo = async (req, res) => {
   if (!validateUrl(youtube_url, 'youtube')) return res.status(400).json({ error: 'URL de YouTube inválida.' });
   if (!validateUrl(drive_url, 'drive')) return res.status(400).json({ error: 'URL de Google Drive inválida.' });
   if (!validateUrl(audio_url, 'minio')) return res.status(400).json({ error: 'URL de Audio (MinIO) inválida.' });
+
+  if (contenido_texto && Array.from(contenido_texto).length > 50000) {
+    return res.status(400).json({ error: 'El contenido de texto no puede exceder los 50,000 caracteres.' });
+  }
 
   try {
     const result = await db.query(`
@@ -104,9 +113,35 @@ const getAdminModulos = async (req, res) => {
   }
 };
 
+const uploadImagenModulo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se subió ninguna imagen' });
+    }
+    const file = req.file;
+
+    // Generar un nombre único para la imagen
+    const objectName = `modulo-${Date.now()}-${file.originalname}`;
+    const bucketName = process.env.MINIO_BUCKET_IMAGENES || 'academia-trading-imagenes-modulos';
+
+    // Subir a MinIO
+    await minioClient.putObject(bucketName, objectName, file.buffer, file.size, {
+      'Content-Type': file.mimetype
+    });
+
+    // Devolver la URL del proxy interno (no la de MinIO directamente)
+    const proxyUrl = `/api/modulos/imagenes/${objectName}`;
+    res.json({ url: proxyUrl });
+  } catch (error) {
+    console.error('Error subiendo imagen a MinIO:', error);
+    res.status(500).json({ error: 'Error interno conectando a MinIO' });
+  }
+};
+
 module.exports = {
   crearModulo,
   actualizarModulo,
   desactivarModulo,
-  getAdminModulos
+  getAdminModulos,
+  uploadImagenModulo
 };

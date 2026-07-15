@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getModulos, getAudioPresignedUrl } = require('../controllers/moduloController');
+const { getModulos, getAudioPresignedUrl, getImagenModulo } = require('../controllers/moduloController');
 const { getPreguntas, submitQuiz } = require('../controllers/quizController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -9,6 +9,7 @@ router.use(authMiddleware);
 
 // Rutas base de módulos (disponibles para usuarios autenticados)
 router.get('/', getModulos);
+router.get('/imagenes/:filename', getImagenModulo);
 router.get('/:id/audio-url', getAudioPresignedUrl);
 
 // Rutas de quizzes de los módulos

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Save } from 'lucide-react';
+import { X, Save, ImagePlus, Loader2 } from 'lucide-react';
 
 export default function ModuloForm({ modulo, onClose, onSaved }) {
   const { token } = useAuth();
@@ -18,6 +18,46 @@ export default function ModuloForm({ modulo, onClose, onSaved }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      setError('La imagen excede el límite de 500 KB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setError(null);
+    const formPayload = new FormData();
+    formPayload.append('imagen', file);
+
+    try {
+      const res = await fetch('/api/admin/modulos/imagenes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formPayload
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error subiendo imagen');
+      
+      const imgMarkdown = `\n![imagen](${data.url})\n`;
+      setFormData(prev => ({
+        ...prev,
+        contenido_texto: prev.contenido_texto + imgMarkdown
+      }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (modulo) {
@@ -181,12 +221,35 @@ export default function ModuloForm({ modulo, onClose, onSaved }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Contenido de Texto (Notas)</label>
+              <div className="flex justify-between items-end mb-1">
+                <label className="block text-sm font-medium text-gray-400">Contenido de Texto (Notas)</label>
+                <div>
+                  <input 
+                    type="file" ref={fileInputRef} onChange={handleImageUpload} 
+                    accept="image/jpeg, image/png, image/webp" className="hidden" 
+                  />
+                  <button 
+                    type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage}
+                    className="flex items-center gap-1 text-xs text-brand-accent hover:text-white transition-colors"
+                  >
+                    {uploadingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <ImagePlus className="w-3 h-3" />}
+                    Subir Imagen
+                  </button>
+                </div>
+              </div>
               <textarea 
                 name="contenido_texto" value={formData.contenido_texto} onChange={handleChange} rows="4"
-                placeholder="Escribe el texto detallado del módulo aquí..."
-                className="w-full bg-[#141617] border border-gray-700 rounded-lg p-2 text-white"
+                placeholder="Escribe el texto detallado del módulo aquí. Puedes usar Markdown."
+                className={`w-full bg-[#141617] border rounded-lg p-2 text-white ${
+                  Array.from(formData.contenido_texto || '').length > 50000 ? 'border-red-500 focus:border-red-500' : 'border-gray-700 focus:border-brand-accent focus:outline-none'
+                }`}
               />
+              <div className="flex justify-between items-start mt-1">
+                <p className="text-xs text-gray-500">Soporta Markdown para formato.</p>
+                <p className={`text-xs ${Array.from(formData.contenido_texto || '').length > 50000 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>
+                  {Array.from(formData.contenido_texto || '').length} / 50.000 caracteres
+                </p>
+              </div>
             </div>
           </div>
 

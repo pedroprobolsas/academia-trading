@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export default function ModuloDetalle() {
   const { id } = useParams();
@@ -180,8 +181,8 @@ export default function ModuloDetalle() {
         {modulo.contenido_texto && (
           <div className="bg-[#141617] rounded-2xl border border-gray-800 p-8">
             <h3 className="text-xl font-bold text-white mb-4 font-heading border-b border-gray-800 pb-2">Notas del Módulo</h3>
-            <div className="prose prose-invert max-w-none text-gray-300 whitespace-pre-wrap">
-              {modulo.contenido_texto}
+            <div className="prose prose-invert max-w-none text-gray-300">
+              <ReactMarkdown>{modulo.contenido_texto}</ReactMarkdown>
             </div>
           </div>
         )}

@@ -84,7 +84,41 @@ const getAudioPresignedUrl = async (req, res) => {
   }
 };
 
+const signatureCache = new Map();
+
+const getImagenModulo = async (req, res) => {
+  const { filename } = req.params;
+  const objectName = filename;
+
+  try {
+    const bucketName = process.env.MINIO_BUCKET_IMAGENES || 'academia-trading-imagenes-modulos';
+
+    // Verificar cache (TTL de 10 minutos)
+    const cachedUrl = signatureCache.get(objectName);
+    if (cachedUrl && cachedUrl.expiresAt > Date.now()) {
+      res.setHeader('Cache-Control', 'private, max-age=600');
+      return res.redirect(302, cachedUrl.url);
+    }
+
+    // Generar nueva firma de 15 minutos (900s)
+    const presignedUrl = await minioClient.presignedGetObject(bucketName, objectName, 900);
+    
+    // Guardar en cache con expiración en 10 minutos (600,000 ms) para asegurar margen
+    signatureCache.set(objectName, {
+      url: presignedUrl,
+      expiresAt: Date.now() + 600000 
+    });
+
+    res.setHeader('Cache-Control', 'private, max-age=600');
+    return res.redirect(302, presignedUrl);
+  } catch (error) {
+    console.error('Error generando URL firmada para imagen:', error);
+    res.status(500).json({ error: 'Error interno conectando a MinIO' });
+  }
+};
+
 module.exports = {
   getModulos,
-  getAudioPresignedUrl
+  getAudioPresignedUrl,
+  getImagenModulo
 };
