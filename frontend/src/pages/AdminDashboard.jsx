@@ -204,7 +204,7 @@ export default function AdminDashboard() {
           ))}
           {alumnos.length === 0 && <p className="text-gray-500">No hay alumnos registrados.</p>}
         </div>
-      ) : (
+      ) : activeTab === 'certificaciones' ? (
         <div className="grid gap-4">
           {certificaciones.map(cert => (
             <div key={cert.id} className="bg-[#1e2124] border border-gray-800 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start gap-4 hover:border-gray-700 transition-colors">

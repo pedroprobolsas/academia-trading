@@ -46,7 +46,7 @@ export default function ModuloForm({ modulo, onClose, onSaved }) {
     setError(null);
 
     const isEditing = !!modulo?.id;
-    const url = isEditing ? \`/api/admin/modulos/\${modulo.id}\` : '/api/admin/modulos';
+    const url = isEditing ? `/api/admin/modulos/${modulo.id}` : '/api/admin/modulos';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -54,7 +54,7 @@ export default function ModuloForm({ modulo, onClose, onSaved }) {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': \`Bearer \${token}\`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
