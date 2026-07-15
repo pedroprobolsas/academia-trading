@@ -173,10 +173,11 @@ export default function ModuloForm({ modulo, onClose, onSaved }) {
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Enlace de Audio (MinIO)</label>
               <input 
-                type="url" placeholder="https://ippminioback.probolsas.co/academia-trading-audios/..."
+                type="text" placeholder="clase-1.mp3"
                 name="audio_url" value={formData.audio_url} onChange={handleChange}
-                className="w-full bg-[#141617] border border-gray-700 rounded-lg p-2 text-white"
+                className="w-full bg-[#141617] border border-gray-700 rounded-lg p-2 text-white focus:border-brand-accent focus:outline-none"
               />
+              <p className="text-xs text-gray-500 mt-1">Solo el nombre del archivo, no la URL completa</p>
             </div>
 
             <div>
