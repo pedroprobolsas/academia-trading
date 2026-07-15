@@ -3,15 +3,17 @@ const db = require('../config/db');
 const validateUrl = (url, type) => {
   if (!url) return true; // Nullable
   
+  if (type === 'minio') {
+    const audioRegex = /^[a-zA-Z0-9_\-]+\.(mp3|wav|ogg)$/;
+    return audioRegex.test(url);
+  }
+
   try {
     const parsed = new URL(url);
     if (type === 'youtube' && !(parsed.hostname.includes('youtube.com') || parsed.hostname.includes('youtu.be'))) {
       return false;
     }
     if (type === 'drive' && !parsed.hostname.includes('drive.google.com')) {
-      return false;
-    }
-    if (type === 'minio' && !parsed.hostname.includes('ippminioback.probolsas.co')) {
       return false;
     }
     return true;

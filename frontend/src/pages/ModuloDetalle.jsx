@@ -11,6 +11,7 @@ export default function ModuloDetalle() {
   const [modulo, setModulo] = useState(null);
   const [preguntas, setPreguntas] = useState([]);
   const [respuestas, setRespuestas] = useState({});
+  const [presignedAudioUrl, setPresignedAudioUrl] = useState(null);
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +39,17 @@ export default function ModuloDetalle() {
         }
 
         setModulo(found);
+
+        // Fetch presigned audio url if audio exists
+        if (found.audio_url || found.formato_principal === 'audio') {
+          const resAudio = await fetch(`/api/modulos/${id}/audio-url`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (resAudio.ok) {
+            const dataAudio = await resAudio.json();
+            setPresignedAudioUrl(dataAudio.presignedUrl);
+          }
+        }
 
         // Fetch questions for this module
         const resPreguntas = await fetch(`/api/modulos/${id}/preguntas`, {
@@ -131,11 +143,11 @@ export default function ModuloDetalle() {
         )}
 
         {/* Renderizado de Audio (MinIO) */}
-        {(modulo.formato_principal === 'audio' || modulo.audio_url) && modulo.audio_url && (
+        {(modulo.formato_principal === 'audio' || modulo.audio_url) && presignedAudioUrl && (
           <div className="bg-[#1e2124] rounded-2xl border border-gray-800 p-6 shadow-lg flex flex-col items-center">
             <h3 className="text-xl font-bold text-white mb-4">🎧 Escuchar la clase</h3>
             <audio controls className="w-full max-w-lg">
-              <source src={modulo.audio_url} type="audio/mpeg" />
+              <source src={presignedAudioUrl} type="audio/mpeg" />
               Tu navegador no soporta el elemento de audio.
             </audio>
           </div>
