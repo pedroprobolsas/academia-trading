@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - target: 5432
+        published: 5444
+        protocol: tcp
+        mode: host
+    volumes:
+      - academia_pgdata:/var/lib/postgresql/data
+
+volumes:
+  academia_pgdata:

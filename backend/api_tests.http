@@ -1,0 +1,77 @@
+### Variables
+@baseUrl = http://localhost:3001
+@token = PON_AQUI_EL_TOKEN_RECIBIDO_EN_EL_LOGIN
+
+---
+### 1. Test de Salud del Servidor
+GET {{baseUrl}}/
+
+---
+### 2. Registro de Nuevo Usuario (Alumno)
+POST {{baseUrl}}/auth/registro
+Content-Type: application/json
+
+{
+  "email": "pedro.piloto@example.com",
+  "password": "MiPasswordSeguro123",
+  "nombre_completo": "Pedro Sandoval",
+  "telefono": "+573001234567",
+  "pais": "Colombia",
+  "nivel_experiencia": "avanzado"
+}
+
+---
+### 3. Login de Usuario
+# Te devolverá el token JWT. Cópialo y pégalo en la variable @token arriba.
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "pedro.piloto@example.com",
+  "password": "MiPasswordSeguro123"
+}
+
+---
+### 4. Crear Perfil de Riesgo (Requiere Token)
+POST {{baseUrl}}/perfiles-riesgo
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "tolerancia_perdida": 8,
+  "impulsividad_score": 3,
+  "capital_disponible_rango": "1000-5000",
+  "experiencia_previa_anios": 2.5,
+  "expectativa_tiempo_meses": 12
+}
+
+---
+### 5. Obtener Listado de Módulos (Requiere Token)
+GET {{baseUrl}}/modulos
+Authorization: Bearer {{token}}
+
+---
+### 6. Obtener Preguntas de un Módulo (Ej. módulo 1)
+@moduloId = REEMPLAZA_CON_UUID_DE_UN_MODULO
+GET {{baseUrl}}/modulos/{{moduloId}}/preguntas
+Authorization: Bearer {{token}}
+
+---
+### 7. Enviar Intento de Quiz (Ej: Checkpoint del módulo 1)
+POST {{baseUrl}}/modulos/{{moduloId}}/quiz-intentos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "tipo": "checkpoint_modulo",
+  "respuestas": [
+    {
+      "pregunta_id": "UUID_DE_PREGUNTA_1",
+      "respuesta_dada": "valor_de_respuesta"
+    },
+    {
+      "pregunta_id": "UUID_DE_PREGUNTA_2",
+      "respuesta_dada": "100.5"
+    }
+  ]
+}
