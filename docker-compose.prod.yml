@@ -5,6 +5,7 @@ services:
     image: ghcr.io/pedroprobolsas/academia-trading-backend:latest
     environment:
       - NODE_ENV=production
+      - PORT=3001
       - DB_HOST=postgres_postgres
       - DB_PORT=5432
       - DB_USER=${POSTGRES_USER}
