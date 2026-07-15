@@ -33,9 +33,13 @@ services:
       replicas: 1
       labels:
         - "traefik.enable=true"
+        - "traefik.http.routers.academia-trading-http.rule=Host(`academia.pedrosandoval.com.co`)"
+        - "traefik.http.routers.academia-trading-http.entrypoints=web"
+        - "traefik.http.routers.academia-trading-http.middlewares=academia-redirect"
+        - "traefik.http.middlewares.academia-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.academia-trading.rule=Host(`academia.pedrosandoval.com.co`)"
         - "traefik.http.routers.academia-trading.entrypoints=websecure"
-        - "traefik.http.routers.academia-trading.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.academia-trading.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.academia-trading.loadbalancer.server.port=80"
       restart_policy:
         condition: on-failure
