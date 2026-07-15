@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Journal from './pages/Journal';
 import Curriculum from './pages/Curriculum';
 import ModuloDetalle from './pages/ModuloDetalle';
+import AdminDashboard from './pages/AdminDashboard';
 import Sidebar from './components/Sidebar';
 
 // Componente protector de rutas
@@ -22,6 +23,13 @@ const ProtectedRoute = ({ children }) => {
       </div>
     </div>
   );
+};
+
+// Rutas de Admin
+const AdminRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.rol !== 'admin') return <Navigate to="/dashboard" replace />;
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 };
 
 function AppRoutes() {
@@ -62,6 +70,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <ModuloDetalle />
           </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/admin" 
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         } 
       />
       <Route path="/configuracion" element={<ProtectedRoute><div className="p-8 text-white">Configuración</div></ProtectedRoute>} />

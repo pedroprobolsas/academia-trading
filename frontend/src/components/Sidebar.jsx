@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, BookOpen, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Settings, LogOut, Shield } from 'lucide-react';
 
 export default function Sidebar() {
   const { logout, user } = useAuth();
@@ -12,6 +12,10 @@ export default function Sidebar() {
     { name: 'Journal', path: '/journal', icon: BookOpen },
     { name: 'Configuración', path: '/configuracion', icon: Settings },
   ];
+
+  if (user?.rol === 'admin') {
+    navItems.push({ name: 'Panel Admin', path: '/admin', icon: Shield });
+  }
 
   return (
     <div className="w-64 bg-[#1e2124] border-r border-gray-800 min-h-screen flex flex-col fixed left-0 top-0">

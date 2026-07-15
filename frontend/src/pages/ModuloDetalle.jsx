@@ -20,7 +20,7 @@ export default function ModuloDetalle() {
     const fetchData = async () => {
       try {
         // Fetch specific module details
-        const resModulos = await fetch('http://localhost:3001/modulos', {
+        const resModulos = await fetch('/api/modulos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const allModulos = await resModulos.json();
@@ -40,7 +40,7 @@ export default function ModuloDetalle() {
         setModulo(found);
 
         // Fetch questions for this module
-        const resPreguntas = await fetch(`http://localhost:3001/modulos/${id}/preguntas`, {
+        const resPreguntas = await fetch(`/api/modulos/${id}/preguntas`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const dataPreguntas = await resPreguntas.json();
@@ -74,7 +74,7 @@ export default function ModuloDetalle() {
     }));
 
     try {
-      const res = await fetch(`http://localhost:3001/modulos/${id}/quiz-intentos`, {
+      const res = await fetch(`/api/modulos/${id}/quiz-intentos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

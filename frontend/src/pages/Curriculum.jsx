@@ -12,7 +12,7 @@ export default function Curriculum() {
   useEffect(() => {
     const fetchModulos = async () => {
       try {
-        const res = await fetch('http://localhost:3001/modulos', {
+        const res = await fetch('/api/modulos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

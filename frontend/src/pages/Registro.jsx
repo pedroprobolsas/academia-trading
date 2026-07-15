@@ -22,7 +22,7 @@ export default function Registro() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3001/auth/registro', {
+      const res = await fetch('/api/auth/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)

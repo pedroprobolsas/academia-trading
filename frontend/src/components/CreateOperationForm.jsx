@@ -46,7 +46,7 @@ export default function CreateOperationForm({ plan, onOperationCreated, onCancel
         resultado_moneda: parseFloat(formData.resultado_moneda)
       };
 
-      const resOp = await fetch('http://localhost:3001/operaciones', {
+      const resOp = await fetch('/api/operaciones', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export default function CreateOperationForm({ plan, onOperationCreated, onCancel
         const formDataImg = new FormData();
         formDataImg.append('imagen', imageFile);
 
-        const resImg = await fetch(`http://localhost:3001/operaciones/${operacionId}/captura`, {
+        const resImg = await fetch(`/api/operaciones/${operacionId}/captura`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

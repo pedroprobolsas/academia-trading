@@ -12,7 +12,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await fetch('http://localhost:3001/metricas/mi-dashboard', {
+        const res = await fetch('/api/metricas/mi-dashboard', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

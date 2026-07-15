@@ -19,7 +19,7 @@ export default function Journal() {
     setLoading(true);
     try {
       // 1. Check if plan exists
-      const resPlan = await fetch('http://localhost:3001/planes-trading/activo', {
+      const resPlan = await fetch('/api/planes-trading/activo', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (resPlan.status === 404) {
@@ -34,7 +34,7 @@ export default function Journal() {
       setNeedsPlan(false);
 
       // 2. Fetch operations
-      const resOps = await fetch('http://localhost:3001/operaciones', {
+      const resOps = await fetch('/api/operaciones', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const dataOps = await resOps.json();
@@ -52,7 +52,7 @@ export default function Journal() {
 
   const viewImage = async (opId) => {
     try {
-      const res = await fetch(`http://localhost:3001/operaciones/${opId}/captura-url`, {
+      const res = await fetch(`/api/operaciones/${opId}/captura-url`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();

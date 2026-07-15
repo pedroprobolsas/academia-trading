@@ -76,19 +76,23 @@ const getCandidatos = async (req, res) => {
 
 const setEstadoCertificacion = async (req, res) => {
   const { id } = req.params;
-  const { estado } = req.body;
+  const { estado, motivo } = req.body;
 
   if (estado !== 'aprobado' && estado !== 'rechazado') {
     return res.status(400).json({ error: "Estado inválido. Debe ser 'aprobado' o 'rechazado'." });
   }
 
+  if (estado === 'rechazado' && !motivo) {
+    return res.status(400).json({ error: 'Debe proveer un motivo para el rechazo.' });
+  }
+
   try {
     const result = await db.query(`
       UPDATE certificaciones 
-      SET estado = $1, updated_at = NOW() 
-      WHERE id = $2 
-      RETURNING id, estado, usuario_id
-    `, [estado, id]);
+      SET estado = $1, motivo_rechazo = $2, updated_at = NOW() 
+      WHERE id = $3 
+      RETURNING id, estado, motivo_rechazo, usuario_id
+    `, [estado, estado === 'rechazado' ? motivo : null, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Certificación no encontrada' });

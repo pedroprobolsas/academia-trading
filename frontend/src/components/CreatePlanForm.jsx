@@ -52,7 +52,7 @@ export default function CreatePlanForm({ onPlanCreated }) {
         condiciones_no_operar: formData.condiciones_no_operar
       };
 
-      const res = await fetch('http://localhost:3001/planes-trading', {
+      const res = await fetch('/api/planes-trading', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

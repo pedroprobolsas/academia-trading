@@ -179,6 +179,7 @@ CREATE TABLE certificaciones (
   criterios_cumplidos JSONB NOT NULL,
   nivel_certificado VARCHAR(30),
   estado VARCHAR(20) NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','aprobado','rechazado')),
+  motivo_rechazo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
