@@ -8,6 +8,7 @@ import Journal from './pages/Journal';
 import Curriculum from './pages/Curriculum';
 import ModuloDetalle from './pages/ModuloDetalle';
 import AdminDashboard from './pages/AdminDashboard';
+import ConstructorModulos from './components/admin/ConstructorModulos/ConstructorModulos';
 import Sidebar from './components/Sidebar';
 
 // Componente protector de rutas
@@ -77,6 +78,14 @@ function AppRoutes() {
         element={
           <AdminRoute>
             <AdminDashboard />
+          </AdminRoute>
+        } 
+      />
+      <Route 
+        path="/admin/modulos/:id/editar" 
+        element={
+          <AdminRoute>
+            <ConstructorModulos />
           </AdminRoute>
         } 
       />

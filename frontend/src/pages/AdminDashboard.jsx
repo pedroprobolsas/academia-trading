@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Shield, AlertTriangle, CheckCircle, XCircle, UserX, UserCheck } from 'lucide-react';
 import ModuloForm from '../components/ModuloForm';
 
 export default function AdminDashboard() {
   const { token } = useAuth();
-  const [activeTab, setActiveTab] = useState('alumnos'); // 'alumnos' | 'certificaciones'
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('alumnos'); // 'alumnos' | 'certificaciones' | 'modulos'
   const [alumnos, setAlumnos] = useState([]);
   const [certificaciones, setCertificaciones] = useState([]);
   const [modulos, setModulos] = useState([]);
@@ -99,6 +101,21 @@ export default function AdminDashboard() {
         setModalType(null);
         setSelectedItem(null);
         setMotivo('');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleCrearModuloBorrador = async () => {
+    try {
+      const res = await fetch('/api/admin/modulos', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const nuevoMod = await res.json();
+        navigate(`/admin/modulos/${nuevoMod.id}/editar`);
       }
     } catch (e) {
       console.error(e);
@@ -254,7 +271,7 @@ export default function AdminDashboard() {
         <div className="grid gap-4">
           <div className="flex justify-end mb-4">
             <button 
-              onClick={() => { setSelectedItem(null); setModalType('moduloForm'); }}
+              onClick={handleCrearModuloBorrador}
               className="px-4 py-2 bg-brand-accent hover:bg-[#ff9075] text-white rounded-lg transition-colors font-medium"
             >
               + Nuevo Módulo
@@ -276,7 +293,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex gap-3">
                 <button 
-                  onClick={() => { setSelectedItem(modulo); setModalType('moduloForm'); }}
+                  onClick={() => navigate(`/admin/modulos/${modulo.id}/editar`)}
                   className="px-4 py-2 border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 rounded-lg transition-colors"
                 >
                   Editar
