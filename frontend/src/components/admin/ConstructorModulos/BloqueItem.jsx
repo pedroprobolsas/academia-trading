@@ -46,6 +46,40 @@ export default function BloqueItem({ bloque, tiposBloque, onUpdate, onDelete }) 
     onUpdate({ config: { ...config, [key]: value } });
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (e, keyToUpdate) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('archivo', file);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/admin/modulos/media', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        onUpdate({ config: { ...config, [keyToUpdate]: data.url } });
+      } else {
+        alert('Error subiendo archivo: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión al subir archivo');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Renderizar campos específicos del tipo de bloque
   const renderConfigFields = () => {
     switch (bloque.tipo) {
@@ -93,42 +127,60 @@ export default function BloqueItem({ bloque, tiposBloque, onUpdate, onDelete }) 
       case 'audio':
         return (
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">URL del Audio (MinIO object name o URL directa)</label>
-            <input
-              type="text"
-              value={config.url || ''}
-              onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
-              placeholder="nombre-del-archivo.mp3"
-              className="w-full bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-colors"
-            />
+            <label className="text-xs font-medium text-gray-500">URL del Audio (o Súbelo)</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={config.url || ''}
+                onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
+                placeholder="https://..."
+                className="flex-1 bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-colors"
+              />
+              <label className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2.5 rounded-lg transition-colors flex items-center whitespace-nowrap">
+                {isUploading ? 'Subiendo...' : 'Subir Audio'}
+                <input type="file" accept="audio/*" className="hidden" onChange={(e) => handleFileUpload(e, 'url')} disabled={isUploading} />
+              </label>
+            </div>
           </div>
         );
 
       case 'documento_drive':
         return (
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">URL de Google Drive</label>
-            <input
-              type="url"
-              value={config.url || ''}
-              onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
-              placeholder="https://drive.google.com/..."
-              className="w-full bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
-            />
+            <label className="text-xs font-medium text-gray-500">URL del PDF / Documento (o Súbelo)</label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={config.url || ''}
+                onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
+                placeholder="https://..."
+                className="flex-1 bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              />
+              <label className="cursor-pointer bg-yellow-600 hover:bg-yellow-700 text-white text-sm px-4 py-2.5 rounded-lg transition-colors flex items-center whitespace-nowrap">
+                {isUploading ? 'Subiendo...' : 'Subir Archivo'}
+                <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => handleFileUpload(e, 'url')} disabled={isUploading} />
+              </label>
+            </div>
           </div>
         );
 
       case 'imagen':
         return (
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-500">URL o ruta de la imagen</label>
-            <input
-              type="text"
-              value={config.url || ''}
-              onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
-              placeholder="/api/modulos/imagenes/nombre.webp"
-              className="w-full bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 transition-colors"
-            />
+            <label className="text-xs font-medium text-gray-500">URL de la imagen (o Súbela)</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={config.url || ''}
+                onChange={(e) => onUpdate({ config: { ...config, url: e.target.value } })}
+                placeholder="https://..."
+                className="flex-1 bg-[#141617] border border-gray-800 rounded-lg p-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50 transition-colors"
+              />
+              <label className="cursor-pointer bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2.5 rounded-lg transition-colors flex items-center whitespace-nowrap">
+                {isUploading ? 'Subiendo...' : 'Subir Imagen'}
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'url')} disabled={isUploading} />
+              </label>
+            </div>
             {config.url && (
               <img src={config.url} alt="Preview" className="mt-2 rounded-lg max-h-48 object-contain bg-black" />
             )}

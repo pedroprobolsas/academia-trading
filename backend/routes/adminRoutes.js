@@ -43,6 +43,8 @@ router.post('/modulos/:id/publicar', adminModuloController.publicarModulo);
 router.post('/modulos/:id/nueva_version', adminModuloController.crearNuevaVersion);
 // Legacy image upload
 router.post('/modulos/imagenes', upload.single('imagen'), adminModuloController.uploadImagenModulo);
+// Nueva ruta genérica para audios, PDFs, etc.
+router.post('/modulos/media', upload.single('archivo'), adminModuloController.uploadMediaModulo);
 
 // --- Rutas de Misiones ---
 router.post('/modulos/:modulo_id/misiones', adminMisionController.crearMision);

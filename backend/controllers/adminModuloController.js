@@ -240,6 +240,24 @@ const uploadImagenModulo = async (req, res) => {
       }
 };
 
+const uploadMediaModulo = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo' });
+        const file = req.file;
+        const objectName = `media-${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        // Enviar PDFs y Audios al bucket de audios (usarlo como genérico de media del módulo)
+        const bucketName = process.env.MINIO_BUCKET_AUDIOS || 'academia-trading-audios';
+        await minioClientMedia.putObject(bucketName, objectName, file.buffer, file.size, { 'Content-Type': file.mimetype });
+        
+        // La URL directa asume que la política pública está aplicada
+        const url = `https://${process.env.MINIO_ENDPOINT || 'ippminioback.probolsas.co'}/${bucketName}/${objectName}`;
+        res.json({ url, objectName });
+    } catch (error) {
+        console.error('Error subiendo media:', error);
+        res.status(500).json({ error: 'Error interno conectando a MinIO' });
+    }
+};
+
 module.exports = {
   crearModuloBorrador,
   getModuloDetalle,
@@ -247,5 +265,6 @@ module.exports = {
   publicarModulo,
   crearNuevaVersion,
   getAdminModulos,
-  uploadImagenModulo
+  uploadImagenModulo,
+  uploadMediaModulo
 };
