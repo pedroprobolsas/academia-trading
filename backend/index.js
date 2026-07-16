@@ -10,6 +10,7 @@ const journalRoutes = require('./routes/journalRoutes');
 const metricasRoutes = require('./routes/metricasRoutes');
 const certificacionRoutes = require('./routes/certificacionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const progresoRoutes = require('./routes/progresoRoutes');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/operaciones', journalRoutes);
 app.use('/metricas', metricasRoutes);
 app.use('/certificaciones', certificacionRoutes);
 app.use('/admin', adminRoutes);
+app.use('/progreso', progresoRoutes);
 
 // Test route
 app.get('/', (req, res) => {
