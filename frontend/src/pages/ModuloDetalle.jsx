@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { ArrowLeft, Play, Lock, CheckCircle2 } from 'lucide-react';
 
 export default function ModuloDetalle() {
   const { id } = useParams();
@@ -10,54 +9,28 @@ export default function ModuloDetalle() {
   const navigate = useNavigate();
   
   const [modulo, setModulo] = useState(null);
-  const [preguntas, setPreguntas] = useState([]);
-  const [respuestas, setRespuestas] = useState({});
-  const [presignedAudioUrl, setPresignedAudioUrl] = useState(null);
-  
+  const [progreso, setProgreso] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [quizResult, setQuizResult] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch specific module details
-        const resModulos = await fetch('/api/modulos', {
+        const resMod = await fetch(`/api/modulos/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const allModulos = await resModulos.json();
-        const found = allModulos.find(m => m.id === id);
-        
-        if (!found) {
+        if (!resMod.ok) {
           navigate('/modulos');
           return;
         }
+        const dataMod = await resMod.json();
         
-        if (found.estado === 'bloqueado') {
-          alert('Este módulo está bloqueado.');
-          navigate('/modulos');
-          return;
-        }
-
-        setModulo(found);
-
-        // Fetch presigned audio url if audio exists
-        if (found.audio_url || found.formato_principal === 'audio') {
-          const resAudio = await fetch(`/api/modulos/${id}/audio-url`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (resAudio.ok) {
-            const dataAudio = await resAudio.json();
-            setPresignedAudioUrl(dataAudio.presignedUrl);
-          }
-        }
-
-        // Fetch questions for this module
-        const resPreguntas = await fetch(`/api/modulos/${id}/preguntas`, {
+        const resProg = await fetch(`/api/modulos/${id}/progreso`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        const dataPreguntas = await resPreguntas.json();
-        setPreguntas(dataPreguntas);
+        const dataProg = resProg.ok ? await resProg.json() : null;
+
+        setModulo(dataMod);
+        setProgreso(dataProg);
       } catch (err) {
         console.error(err);
       } finally {
@@ -67,217 +40,113 @@ export default function ModuloDetalle() {
     fetchData();
   }, [id, token, navigate]);
 
-  const handleOptionChange = (preguntaId, valor) => {
-    setRespuestas(prev => ({ ...prev, [preguntaId]: valor }));
-  };
-
-  const handlePracticaChange = (preguntaId, valor) => {
-    setRespuestas(prev => ({ ...prev, [preguntaId]: parseFloat(valor) }));
-  };
-
-  const handleSubmitQuiz = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setQuizResult(null);
-
-    // Format respuestas to expected array
-    const formattedRespuestas = Object.keys(respuestas).map(qId => ({
-      pregunta_id: qId,
-      respuesta_dada: respuestas[qId]
-    }));
-
-    try {
-      const res = await fetch(`/api/modulos/${id}/quiz-intentos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          tipo: 'checkpoint_modulo',
-          respuestas: formattedRespuestas
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al calificar');
-      
-      setQuizResult(data);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (loading || !modulo) {
-    return <div className="p-8 text-gray-400">Cargando clase...</div>;
+    return <div className="min-h-screen bg-[#0A0C0F] flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-brand-primary"></div></div>;
   }
 
+  const bloquesCompletados = progreso?.bloques_completados?.map(b => b.bloque_id) || [];
+  const porcentaje = progreso?.progreso_porcentaje || 0;
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <Link to="/modulos" className="inline-flex items-center gap-2 text-brand-accent hover:text-white mb-6 transition-colors">
-        <ArrowLeft className="w-5 h-5" /> Volver al Currículum
-      </Link>
+    <div className="min-h-screen bg-[#0A0C0F] p-8 md:p-12">
+      <div className="max-w-5xl mx-auto">
+        <Link to="/modulos" className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors font-medium">
+          <ArrowLeft className="w-5 h-5" /> Volver al Currículum
+        </Link>
 
-      <header className="mb-8">
-        <div className="text-sm font-bold text-gray-400 mb-2 font-heading tracking-wider uppercase">
-          Módulo {modulo.numero_orden}
-        </div>
-        <h1 className="text-3xl md:text-4xl font-heading font-bold text-white mb-4">{modulo.titulo}</h1>
-        <p className="text-lg text-gray-300">{modulo.descripcion}</p>
-      </header>
-
-      {/* Visor de Contenido */}
-      <div className="mb-12 space-y-8">
-        {/* Renderizado de Video (YouTube) */}
-        {(modulo.formato_principal === 'video' || modulo.youtube_url) && modulo.youtube_url && (
-          <div className="bg-black aspect-video rounded-2xl border border-gray-800 flex items-center justify-center shadow-2xl relative overflow-hidden">
-            <iframe 
-              src={modulo.youtube_url.replace('youtu.be/', 'www.youtube.com/embed/').replace('watch?v=', 'embed/')} 
-              title={modulo.titulo}
-              className="w-full h-full absolute inset-0"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowFullScreen
-            ></iframe>
+        {/* Header del Módulo */}
+        <div className="bg-[#141617] border border-gray-800 rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden flex flex-col md:flex-row gap-8 items-center">
+          {/* Decorative blur */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none" />
+          
+          <div className="w-48 h-48 shrink-0 rounded-2xl overflow-hidden bg-black border border-gray-800 shadow-2xl">
+            {modulo.imagen_portada_object_name ? (
+              <img src={`/api/modulos/imagenes/${modulo.imagen_portada_object_name}`} alt={modulo.titulo} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-700 font-bold text-6xl">
+                {modulo.numero_orden}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Renderizado de Audio (MinIO) */}
-        {(modulo.formato_principal === 'audio' || modulo.audio_url) && presignedAudioUrl && (
-          <div className="bg-[#1e2124] rounded-2xl border border-gray-800 p-6 shadow-lg flex flex-col items-center">
-            <h3 className="text-xl font-bold text-white mb-4">🎧 Escuchar la clase</h3>
-            <audio controls className="w-full max-w-lg">
-              <source src={presignedAudioUrl} type="audio/mpeg" />
-              Tu navegador no soporta el elemento de audio.
-            </audio>
-          </div>
-        )}
+          <div className="flex-1 z-10 text-center md:text-left">
+            <div className="text-brand-primary font-semibold tracking-wider text-sm mb-3">MÓDULO {modulo.numero_orden}</div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">{modulo.titulo}</h1>
+            {modulo.subtitulo && <p className="text-xl text-gray-300 mb-6">{modulo.subtitulo}</p>}
+            
+            <div className="flex flex-col md:flex-row items-center gap-6 mt-8">
+              <button 
+                onClick={() => navigate(`/modulos/${id}/clase`)}
+                className="px-8 py-4 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold text-lg flex items-center gap-3 transition-all shadow-[0_0_30px_rgba(255,87,34,0.3)] hover:scale-105 hover:shadow-[0_0_40px_rgba(255,87,34,0.5)] w-full md:w-auto justify-center"
+              >
+                <Play className="w-6 h-6 fill-current" />
+                {porcentaje === 0 ? 'Iniciar Módulo' : 'Continuar Aprendizaje'}
+              </button>
 
-        {/* Renderizado de Documento (Drive) */}
-        {(modulo.formato_principal === 'documento' || modulo.drive_url) && modulo.drive_url && (
-          <div className="bg-[#141617] rounded-2xl border border-brand-accent/30 p-8 text-center flex flex-col items-center justify-center group">
-            <FileText className="w-16 h-16 text-brand-accent mb-4 opacity-80 group-hover:scale-110 transition-transform" />
-            <h3 className="text-xl font-bold text-white mb-2">Material de Apoyo en PDF</h3>
-            <p className="text-gray-400 mb-6 max-w-md">Descarga o visualiza el documento completo de la clase directamente desde Google Drive.</p>
-            <a href={modulo.drive_url} target="_blank" rel="noreferrer" className="px-6 py-3 bg-brand-accent text-white font-bold rounded-lg hover:bg-white hover:text-brand-accent transition-colors shadow-[0_0_15px_rgba(253,123,91,0.3)]">
-              Abrir Documento en Drive
-            </a>
-          </div>
-        )}
-
-        {/* Legacy fallback */}
-        {(!modulo.youtube_url && !modulo.drive_url && !modulo.audio_url && modulo.contenido_url) && (
-          <div className="bg-[#141617] rounded-2xl border border-gray-800 p-8 text-center flex flex-col items-center justify-center">
-             <PlayCircle className="w-16 h-16 text-brand-accent mb-4" />
-             <h3 className="text-xl font-bold text-white mb-4">Material de la Clase (Legacy)</h3>
-             <a href={modulo.contenido_url} target="_blank" rel="noreferrer" className="px-6 py-2 bg-gray-800 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors">
-               Abrir Enlace Externo
-             </a>
-          </div>
-        )}
-
-        {/* Renderizado de Texto/Notas */}
-        {modulo.contenido_texto && (
-          <div className="bg-[#141617] rounded-2xl border border-gray-800 p-8">
-            <h3 className="text-xl font-bold text-white mb-4 font-heading border-b border-gray-800 pb-2">Notas del Módulo</h3>
-            <div className="prose prose-invert max-w-none text-gray-300">
-              <ReactMarkdown>{modulo.contenido_texto}</ReactMarkdown>
+              <div className="flex items-center gap-4 w-full md:w-64">
+                <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-brand-primary rounded-full transition-all duration-1000" style={{ width: `${porcentaje}%` }} />
+                </div>
+                <span className="text-sm font-bold text-gray-300">{porcentaje}%</span>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Sección del Quiz */}
-      {preguntas.length > 0 && (
-        <div className="bg-[#1e2124] rounded-2xl border border-gray-800 p-8 shadow-lg">
-          <h2 className="text-2xl font-heading font-bold text-white mb-6 border-b border-gray-800 pb-4">
-            Checkpoint: Demuestra lo aprendido
+        {/* Temario (Syllabus) */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+            <svg className="w-6 h-6 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            Temario del Módulo
           </h2>
 
-          {quizResult ? (
-            <div className={`p-6 rounded-xl border ${quizResult.aprobado ? 'bg-green-500/10 border-green-500/30' : 'bg-brand-alert/10 border-brand-alert/30'} text-center`}>
-              {quizResult.aprobado ? (
-                <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-              ) : (
-                <AlertCircle className="w-16 h-16 text-brand-alert mx-auto mb-4" />
-              )}
-              <h3 className={`text-2xl font-bold mb-2 ${quizResult.aprobado ? 'text-green-400' : 'text-brand-alert'}`}>
-                Calificación: {quizResult.puntaje}%
-              </h3>
-              <p className="text-gray-300 mb-6 text-lg">
-                {quizResult.aprobado 
-                  ? '¡Excelente! Has aprobado el checkpoint y el siguiente módulo ha sido desbloqueado.' 
-                  : 'No has alcanzado el 70% necesario. Repasa la clase e inténtalo de nuevo.'}
-              </p>
-              
-              {!quizResult.aprobado ? (
-                <button 
-                  onClick={() => { setQuizResult(null); setRespuestas({}); }}
-                  className="bg-brand-accent text-white px-8 py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all"
-                >
-                  Reintentar Quiz
-                </button>
-              ) : (
-                <Link 
-                  to="/modulos"
-                  className="inline-block bg-white text-brand-accent px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all"
-                >
-                  Continuar Aprendizaje
-                </Link>
-              )}
-            </div>
-          ) : (
-            <form onSubmit={handleSubmitQuiz} className="space-y-8">
-              {preguntas.map((q, idx) => (
-                <div key={q.id} className="bg-[#141617] p-6 rounded-xl border border-gray-700">
-                  <p className="text-lg font-medium text-white mb-4">
-                    <span className="text-brand-accent font-bold mr-2">{idx + 1}.</span>
-                    {q.enunciado}
-                  </p>
-                  
-                  {q.tipo === 'opcion_multiple' || q.tipo === 'verdadero_falso' ? (
-                    <div className="space-y-3">
-                      {q.opciones.map(opt => (
-                        <label key={opt.id} className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors bg-[#1e2124]">
-                          <input 
-                            type="radio" 
-                            name={`q_${q.id}`} 
-                            className="w-4 h-4 accent-brand-accent"
-                            required
-                            checked={respuestas[q.id] === opt.id}
-                            onChange={() => handleOptionChange(q.id, opt.id)}
-                          />
-                          <span className="text-gray-300">{opt.texto}</span>
-                        </label>
-                      ))}
+          <div className="space-y-6">
+            {(modulo.misiones || []).map((mision, idx) => (
+              <div key={mision.id} className="bg-[#141617] border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="p-6 bg-[#1A1C1E] border-b border-gray-800">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center font-bold">
+                      {idx + 1}
                     </div>
-                  ) : q.tipo === 'practica_numerica' ? (
                     <div>
-                      <input 
-                        type="number" 
-                        step="0.01" 
-                        required
-                        placeholder="Escribe el valor exacto..."
-                        className="w-full md:w-1/2 px-4 py-3 bg-[#1e2124] border border-gray-700 rounded-lg focus:outline-none focus:border-brand-accent text-white"
-                        onChange={(e) => handlePracticaChange(q.id, e.target.value)}
-                      />
+                      <h3 className="text-lg font-bold text-white">{mision.titulo}</h3>
+                      <p className="text-sm text-gray-400 mt-1">{mision.objetivo || 'Misión'}</p>
                     </div>
-                  ) : null}
+                  </div>
                 </div>
-              ))}
-
-              <button 
-                type="submit" 
-                disabled={submitting || preguntas.length === 0}
-                className="w-full py-4 bg-brand-accent text-white text-lg font-bold rounded-xl hover:bg-opacity-90 transition-all shadow-[0_0_20px_rgba(253,123,91,0.2)]"
-              >
-                {submitting ? 'Calificando...' : 'Enviar Respuestas y Calificar'}
-              </button>
-            </form>
-          )}
+                
+                <div className="divide-y divide-gray-800/50">
+                  {(mision.bloques || []).map((bloque) => {
+                    const isCompletado = bloquesCompletados.includes(bloque.id);
+                    return (
+                      <div key={bloque.id} className="p-4 px-6 flex items-center justify-between hover:bg-gray-800/20 transition-colors">
+                        <div className="flex items-center gap-4">
+                          {isCompletado ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-gray-600 shrink-0" />
+                          )}
+                          <span className={`text-sm ${isCompletado ? 'text-gray-300' : 'text-gray-500'}`}>{bloque.titulo}</span>
+                        </div>
+                        <span className="text-xs font-medium text-gray-600 bg-gray-800/50 px-3 py-1 rounded-full">
+                          {bloque.duracion_estimada_min} min
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            
+            {(!modulo.misiones || modulo.misiones.length === 0) && (
+              <div className="text-center py-12 text-gray-500 border border-dashed border-gray-800 rounded-2xl">
+                Este módulo aún no tiene contenido publicado.
+              </div>
+            )}
+          </div>
         </div>
-      )}
+
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import ModuloDetalle from './pages/ModuloDetalle';
 import AdminDashboard from './pages/AdminDashboard';
 import ConstructorModulos from './components/admin/ConstructorModulos/ConstructorModulos';
 import Sidebar from './components/Sidebar';
+import VisorClase from './pages/VisorClase';
 
 // Componente protector de rutas
 const ProtectedRoute = ({ children }) => {
@@ -70,6 +71,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ModuloDetalle />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/modulos/:id/clase" 
+        element={
+          <ProtectedRoute>
+            <VisorClase />
           </ProtectedRoute>
         } 
       />
