@@ -16,8 +16,8 @@ const crearModuloBorrador = async (req, res) => {
     const nextOrden = resCount.rows[0].next_orden;
 
     const result = await db.query(`
-      INSERT INTO modulos (numero_orden, titulo, estado) 
-      VALUES ($1, $2, 'borrador')
+      INSERT INTO modulos (numero_orden, titulo, estado, nivel) 
+      VALUES ($1, $2, 'borrador', 1)
       RETURNING *
     `, [nextOrden, 'Nuevo Módulo (Borrador)']);
 
