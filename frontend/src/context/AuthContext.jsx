@@ -30,6 +30,28 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Interceptar todas las peticiones fetch para manejar tokens expirados (401)
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      
+      const url = args[0] && typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+      const isAuthRoute = url.includes('/api/auth/');
+
+      // Si recibimos un 401 y no es una ruta de autenticación (login/registro), cerramos sesión
+      if (response.status === 401 && !isAuthRoute) {
+        setToken(null);
+        setUser(null);
+      }
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
   return (
     <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token }}>
       {children}

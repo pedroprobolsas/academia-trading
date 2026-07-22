@@ -116,9 +116,13 @@ export default function AdminDashboard() {
       if (res.ok) {
         const nuevoMod = await res.json();
         navigate(`/admin/modulos/${nuevoMod.id}/editar`);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        alert(`Error al crear módulo: ${errorData?.error || res.status}`);
       }
     } catch (e) {
       console.error(e);
+      alert(`Error de red: ${e.message}`);
     }
   };
 
